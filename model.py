@@ -12,6 +12,7 @@ from os.path import join
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from config import *
 import csv
+from preprocess import preprocess
 # Read images and steering angles from training data
 def read_csv_data(path = 'data/driving_log.csv'):
     '''
@@ -46,35 +47,6 @@ def split_train_val(csv_driving_data, test_size=0.2):
 
     return train_data, val_data
 
-def preprocess(frame_bgr, verbose=False):
-    """
-    Perform preprocessing steps on a single bgr frame.
-    These inlcude: cropping, resizing, eventually converting to grayscale
-
-    :param frame_bgr: input color frame in BGR format
-    :param verbose: if true, open debugging visualization
-    :return:
-    """
-    # set training images resized shape
-    h, w = CONFIG['input_height'], CONFIG['input_width']
-
-    # crop image (remove useless information)
-    frame_cropped = frame_bgr[CONFIG['crop_height'], :, :]
-
-    # resize image
-    frame_resized = cv2.resize(frame_cropped, dsize=(w, h))
-
-    # eventually change color space
-    if CONFIG['input_channels'] == 1:
-        frame_resized = np.expand_dims(cv2.cvtColor(frame_resized, cv2.COLOR_BGR2YUV)[:, :, 0], 2)
-
-    if verbose:
-        plt.figure(1), plt.imshow(cv2.cvtColor(frame_bgr, code=cv2.COLOR_BGR2RGB))
-        plt.figure(2), plt.imshow(cv2.cvtColor(frame_cropped, code=cv2.COLOR_BGR2RGB))
-        plt.figure(3), plt.imshow(cv2.cvtColor(frame_resized, code=cv2.COLOR_BGR2RGB))
-        plt.show()
-
-    return frame_resized.astype('float32')
 
 def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='data', augment_data=True):
     '''
@@ -113,7 +85,7 @@ def get_model(summary = True):
     :return: keras Model of NVIDIA architecture
     '''
     model = Sequential()
-    model.add(Lambda(lambda x: x/127.5 - 1.,input_shape=(NVIDIA_H, NVIDIA_W, CONFIG['input_channels'])))
+    model.add(Lambda(lambda x: x/255. - 0.5,input_shape=(NVIDIA_H, NVIDIA_W, CONFIG['input_channels'])))
     model.add(Conv2D(24, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(36, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(48, (5, 5), strides=(2, 2),activation = 'relu'))
@@ -158,4 +130,4 @@ if __name__ == '__main__':
                         validation_data=generate_data_batch(val_data, augment_data=False),
                         validation_steps=len(val_data)/CONFIG['batchsize'],
                         callbacks=[checkpointer, logger])
-    model.save('model.h5')
+    model.save('model1.h5')
