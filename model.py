@@ -76,11 +76,13 @@ def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='data', au
                 steering_center = float(batch_data[3])
                 steering_left = steering_center + correction
                 steering_right = steering_center - correction
-                images.extend([center_image,left_image,right_image])
-                angles.extend([steering_center,steering_left,steering_right])
+                raw_images = [center_image,left_image,right_image]
+                raw_angles = [steering_center,steering_left,steering_right]
+                images.extend(raw_images)
+                angles.extend(raw_angles)
                 if augment_data:
                     images_flipped,angles_flipped = [],[]
-                    for image,angle in zip(images,angles):
+                    for image,angle in zip(raw_images,raw_angles):
                         images_flipped.append(np.fliplr(image))
                         angles_flipped.append(-angle)
                     images.extend(images_flipped)
@@ -140,7 +142,7 @@ if __name__ == '__main__':
     logger = CSVLogger(filename='logs/history.csv')
 
     # start the training
-    model.fit_generator(generator=generate_data_batch(train_data, augment_data=False),
+    model.fit_generator(generator=generate_data_batch(train_data, augment_data=True),
                         steps_per_epoch=len(train_data)/64,
                         epochs=10,
                         validation_data=generate_data_batch(val_data, augment_data=False),
