@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pandas as pd
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Lambda
+from keras.layers import Conv2D, Cropping2D, MaxPooling2D, Flatten, Dense, Dropout, Lambda
 
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
@@ -61,18 +61,31 @@ def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='data', au
     :return: X, Y which are the batch of input frames and steering angles respectively
     '''
     num_data = len(data)
+    correction = CONFIG['correction']
     while True: # Loop forever so the generator never terminates
         # shuffle data
         shuffled_data = shuffle(data)
         for offset in range(0,num_data,batchsize):
-            batch_datas = data[offset:offset+batchsize]
+            batch_datas = shuffled_data[offset:offset+batchsize]
             images = []
             angles = []
             for batch_data in batch_datas:
-                center_image = preprocess(cv2.imread(join(data_dir,batch_data[0].strip())))
-                center_angle = float(batch_data[3])
-                images.append(center_image)
-                angles.append(center_angle)
+                center_image = cv2.imread(join(data_dir,batch_data[0].strip()))
+                left_image = cv2.imread(join(data_dir,batch_data[1].strip()))
+                right_image = cv2.imread(join(data_dir,batch_data[2].strip()))
+                steering_center = float(batch_data[3])
+                steering_left = steering_center + correction
+                steering_right = steering_center - correction
+                images.extend([center_image,left_image,right_image])
+                angles.extend([steering_center,steering_left,steering_right])
+                if augment_data:
+                    images_flipped,angles_flipped = [],[]
+                    for image,angle in zip(images,angles):
+                        images_flipped.append(np.fliplr(image))
+                        angles_flipped.append(-angle)
+                    images.extend(images_flipped)
+                    angles.extend(angles_flipped)
+
             X_train = np.array(images)
             y_train = np.array(angles)
             yield shuffle(X_train, y_train)
@@ -85,16 +98,19 @@ def get_model(summary = True):
     :return: keras Model of NVIDIA architecture
     '''
     model = Sequential()
-    model.add(Lambda(lambda x: x/255. - 0.5,input_shape=(NVIDIA_H, NVIDIA_W, CONFIG['input_channels'])))
+    model.add(Lambda(lambda x: x/255.0 - 0.5,input_shape=(160,320,3)))
+    model.add(Cropping2D(cropping = ((70,25),(0,0))))
     model.add(Conv2D(24, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(36, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(48, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(64, (3, 3),activation = 'relu'))
     model.add(Conv2D(64, (3, 3),activation = 'relu'))
+    #model.add(Dropout(0.5))
     model.add(Flatten())
     model.add(Dense(100))
     model.add(Dense(50))
     model.add(Dense(10))
+    #model.add(Dropout(0.5))
     model.add(Dense(1))
 
     if summary:
@@ -124,10 +140,10 @@ if __name__ == '__main__':
     logger = CSVLogger(filename='logs/history.csv')
 
     # start the training
-    model.fit_generator(generator=generate_data_batch(train_data, augment_data=True),
-                        steps_per_epoch=len(train_data)/CONFIG['batchsize'],
-                        epochs=1,
+    model.fit_generator(generator=generate_data_batch(train_data, augment_data=False),
+                        steps_per_epoch=len(train_data)/64,
+                        epochs=10,
                         validation_data=generate_data_batch(val_data, augment_data=False),
-                        validation_steps=len(val_data)/CONFIG['batchsize'],
+                        validation_steps=len(val_data)/64,
                         callbacks=[checkpointer, logger])
-    model.save('model1.h5')
+    model.save('model.h5')
