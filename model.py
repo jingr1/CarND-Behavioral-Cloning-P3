@@ -48,7 +48,7 @@ def split_train_val(csv_driving_data, test_size=0.2):
     return train_data, val_data
 
 
-def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='data', augment_data=True):
+def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='my_data/IMG', augment_data=True):
     '''
     Generator that indefinitely yield batches of training data from 'data' list.
     A batch of data is constituted by a batch of frames of the training track as well as the corresponding
@@ -70,17 +70,23 @@ def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='data', au
             images = []
             angles = []
             for batch_data in batch_datas:
-                center_image = cv2.imread(join(data_dir,batch_data[0].strip()))
-                left_image = cv2.imread(join(data_dir,batch_data[1].strip()))
-                right_image = cv2.imread(join(data_dir,batch_data[2].strip()))
+                center_image = cv2.imread(join(data_dir,batch_data[0].split('\\')[-1]))
+                left_image = cv2.imread(join(data_dir,batch_data[1].split('\\')[-1]))
+                right_image = cv2.imread(join(data_dir,batch_data[2].split('\\')[-1]))
                 steering_center = float(batch_data[3])
                 steering_left = steering_center + correction
                 steering_right = steering_center - correction
-                raw_images = [center_image,left_image,right_image]
-                raw_angles = [steering_center,steering_left,steering_right]
+                use_three_camera = False
+                if use_three_camera:
+                    raw_images = [center_image,left_image,right_image]
+                    raw_angles = [steering_center,steering_left,steering_right]
+                else:
+                    raw_images = [center_image]
+                    raw_angles = [steering_center]
                 images.extend(raw_images)
                 angles.extend(raw_angles)
                 if augment_data:
+                    #Augument the data with Flipping Images
                     images_flipped,angles_flipped = [],[]
                     for image,angle in zip(raw_images,raw_angles):
                         images_flipped.append(np.fliplr(image))
@@ -107,12 +113,12 @@ def get_model(summary = True):
     model.add(Conv2D(48, (5, 5), strides=(2, 2),activation = 'relu'))
     model.add(Conv2D(64, (3, 3),activation = 'relu'))
     model.add(Conv2D(64, (3, 3),activation = 'relu'))
-    #model.add(Dropout(0.5))
+    model.add(Dropout(0.75))
     model.add(Flatten())
     model.add(Dense(100))
     model.add(Dense(50))
     model.add(Dense(10))
-    #model.add(Dropout(0.5))
+    model.add(Dropout(0.5))
     model.add(Dense(1))
 
     if summary:
@@ -122,7 +128,7 @@ def get_model(summary = True):
 
 if __name__ == '__main__':
     # split udacity csv data into training and validation
-    train_data, val_data = split_train_val(csv_driving_data='data/driving_log.csv')
+    train_data, val_data = split_train_val(csv_driving_data='my_data/driving_log.csv')
 
     # get network model and compile it (default Adam opt)
     model = get_model(summary=True)
