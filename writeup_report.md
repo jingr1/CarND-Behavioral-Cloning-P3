@@ -1,5 +1,4 @@
 # **Behavioral Cloning** 
----
 
 **Behavioral Cloning Project**
 
@@ -34,7 +33,7 @@ My project includes the following files:
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network 
 * writeup_report.md summarizing the results
-* video.mp4 - A video recording of my vehicle driving autonomously one lap around the track.
+* video.mp4 A video recording of my vehicle driving autonomously one lap around the track.
 
 #### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
@@ -50,7 +49,7 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-My model corresponding to the NVIDIA architecture described in paper "End to end learning for self-driving cars." which consists of 10 layers, including a normalization layer, a Cropping layer, 5 convolutional layers and 3 fully connected layers.
+My model corresponding to the NVIDIA architecture described in paper "End to end learning for self-driving cars." which consists of 10 layers, including a normalization layer, a Cropping layer, 5 convolutional layers and 3 fully connected layers(model.py lines 80-107).
 
 The first layer of the network performs image normalization. The normalizer is hard-coded and is not adjusted in the learning process. Performing normalization in the network allows the normalization scheme to be altered with the network architecture and to be accelerated via GPU processing.
 
@@ -64,13 +63,13 @@ controller for steering, but we note that by training the system end-to-end, it 
 
 #### 2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+The model contains dropout layers in order to reduce overfitting (model.py lines 96 101). 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was trained and validated on different data sets to ensure that the model was not overfitting (model.py line 15-28). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 #### 3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 115).
 
 #### 4. Appropriate training data
 
@@ -97,7 +96,7 @@ At the end of the process, the vehicle is able to drive autonomously around the 
 
 #### 2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a normalization layer, a Cropping layer, 5 convolutional layers following a dropout layer and 3 fully connected layers following a dropout layer.
+The final model architecture (model.py lines 80-107) consisted of a normalization layer, a Cropping layer, 5 convolutional layers following a dropout layer and 3 fully connected layers following a dropout layer.
 Here is a visualization of the architecture .
 
 ![alt text][image1]
@@ -122,7 +121,7 @@ To augment the data sat, I also flipped images and angles thinking that this wou
 ![alt text][image7]
 
 
-After the collection process, I had X number of data points. I then preprocessed this data by normalization and cropping.
+After the collection process, I had 13104 number of data points. I then preprocessed this data by normalization and cropping.
 
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 

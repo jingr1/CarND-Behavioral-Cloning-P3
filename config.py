@@ -9,7 +9,7 @@ FLAGS = flags.FLAGS
 NVIDIA_H, NVIDIA_W = 66, 200
 
 CONFIG = {
-    'batchsize': 64,
+    'batchsize': 256,
     'input_width': NVIDIA_W,
     'input_height': NVIDIA_H,
     'input_channels': 3,

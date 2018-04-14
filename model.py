@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import pandas as pd
 from keras.models import Sequential
 from keras.layers import Conv2D, Cropping2D, MaxPooling2D, Flatten, Dense, Dropout, Lambda
 
@@ -12,25 +11,6 @@ from os.path import join
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from config import *
 import csv
-from preprocess import preprocess
-# Read images and steering angles from training data
-def read_csv_data(path = 'data/driving_log.csv'):
-    '''
-    Read all the data from csv file with padas,
-    Not used in this project as it needs lots of memorys.
-    '''
-    df=pd.read_csv(path, sep=',',header=0)
-
-    center_image_source_path = df['center']
-    center_image_current_path = center_image_source_path.apply(lambda x: 'data/IMG/'+ x.split('/')[-1])
-    center_images = center_image_current_path.apply(lambda x : cv2.imread(x))
-    steering_angles = df['steering']
-
-    X_train = np.array(center_images)
-    y_train = np.array(steering_angles)
-
-    return X_train, y_train
-
 
 def split_train_val(csv_driving_data, test_size=0.2):
     """
@@ -43,12 +23,12 @@ def split_train_val(csv_driving_data, test_size=0.2):
         reader = csv.reader(f)
         driving_data = [row for row in reader][1:]
 
-    train_data, val_data = train_test_split(driving_data, test_size=test_size, random_state=1)
+    train_data, val_data = train_test_split(driving_data, test_size=test_size, random_state=0)
 
     return train_data, val_data
 
 
-def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='my_data/IMG', augment_data=True):
+def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='track1/IMG', augment_data=True):
     '''
     Generator that indefinitely yield batches of training data from 'data' list.
     A batch of data is constituted by a batch of frames of the training track as well as the corresponding
@@ -128,7 +108,7 @@ def get_model(summary = True):
 
 if __name__ == '__main__':
     # split udacity csv data into training and validation
-    train_data, val_data = split_train_val(csv_driving_data='my_data/driving_log.csv')
+    train_data, val_data = split_train_val(csv_driving_data='track1/driving_log.csv')
 
     # get network model and compile it (default Adam opt)
     model = get_model(summary=True)
@@ -148,10 +128,10 @@ if __name__ == '__main__':
     logger = CSVLogger(filename='logs/history.csv')
 
     # start the training
-    model.fit_generator(generator=generate_data_batch(train_data, augment_data=True),
-                        steps_per_epoch=len(train_data)/64,
-                        epochs=10,
+    model.fit_generator(generator=generate_data_batch(train_data, augment_data=False),
+                        steps_per_epoch=len(train_data)/256,
+                        epochs=30,
                         validation_data=generate_data_batch(val_data, augment_data=False),
-                        validation_steps=len(val_data)/64,
+                        validation_steps=len(val_data)/256,
                         callbacks=[checkpointer, logger])
     model.save('model.h5')
