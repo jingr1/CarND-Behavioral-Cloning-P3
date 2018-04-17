@@ -129,9 +129,9 @@ if __name__ == '__main__':
 
     # start the training
     model.fit_generator(generator=generate_data_batch(train_data, augment_data=False),
-                        steps_per_epoch=len(train_data)/256,
-                        epochs=30,
+                        steps_per_epoch=len(train_data)/CONFIG['batchsize'],
+                        epochs=10,
                         validation_data=generate_data_batch(val_data, augment_data=False),
-                        validation_steps=len(val_data)/256,
+                        validation_steps=len(val_data)/CONFIG['batchsize'],
                         callbacks=[checkpointer, logger])
     model.save('model.h5')

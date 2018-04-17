@@ -88,7 +88,7 @@ highways With minimum training data from humans the system.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error (0.000777809085402) on the training set but a high mean squared error(0.0532700421651) on the validation set. This implied that the model was overfitting.
 
-To combat the overfitting, I modified the model so that it has a low mean squared error on both the training and validation sets.
+To combat the overfitting, I modified the model(add two dropout layers) so that it has a low mean squared error on both the training and validation sets.
 
 The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track especially around the corner. To improve the driving behavior in these cases, I collect more data especially the turning data.
 
