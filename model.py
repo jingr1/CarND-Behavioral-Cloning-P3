@@ -11,6 +11,7 @@ from os.path import join
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from config import *
 import csv
+from PIL import Image
 
 def split_train_val(csv_driving_data, test_size=0.2):
     """
@@ -50,9 +51,9 @@ def generate_data_batch(data, batchsize=CONFIG['batchsize'], data_dir='track1/IM
             images = []
             angles = []
             for batch_data in batch_datas:
-                center_image = cv2.imread(join(data_dir,batch_data[0].split('\\')[-1]))
-                left_image = cv2.imread(join(data_dir,batch_data[1].split('\\')[-1]))
-                right_image = cv2.imread(join(data_dir,batch_data[2].split('\\')[-1]))
+                center_image = np.asarray(Image.open(join(data_dir,batch_data[0].split('\\')[-1])))
+                left_image = np.asarray(Image.open(join(data_dir,batch_data[1].split('\\')[-1])))
+                right_image = np.asarray(Image.open(join(data_dir,batch_data[2].split('\\')[-1])))
                 steering_center = float(batch_data[3])
                 steering_left = steering_center + correction
                 steering_right = steering_center - correction
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     # start the training
     model.fit_generator(generator=generate_data_batch(train_data, augment_data=False),
                         steps_per_epoch=len(train_data)/CONFIG['batchsize'],
-                        epochs=10,
+                        epochs=5,
                         validation_data=generate_data_batch(val_data, augment_data=False),
                         validation_steps=len(val_data)/CONFIG['batchsize'],
                         callbacks=[checkpointer, logger])
